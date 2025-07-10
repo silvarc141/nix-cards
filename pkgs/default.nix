@@ -1,1 +1,1 @@
-{pkgs, pkgsSelf, utils, ...}: utils.callPackagesInDirectory ./. {inherit pkgs pkgsSelf;}
+{pkgsSelf, utils, ...}: utils.callPackagesInDirectory ./. {inherit pkgsSelf;}
