@@ -3,7 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
-    nix-utils.url = "github:silvarc141/nix-utils";
+    nix-utils = {
+      url = "github:silvarc141/nix-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -19,9 +22,10 @@
     ];
     legacyPackages = genAttrs allSystems (system: import ./pkgs {
         pkgs = nixpkgs.legacyPackages.${system};
-        utils = nix-utils.${system}.legacyPackages.lib;
+        pkgsSelf = self.legacyPackages.${system};
+        utils = nix-utils.legacyPackages.${system}.lib;
       });
     formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
-    defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.cards.todo);
+    defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.ruby-squib-env);
   in {inherit formatter legacyPackages defaultPackage;};
 }
