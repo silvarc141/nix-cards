@@ -23,7 +23,7 @@
     legacyPackages = genAttrs allSystems (system: import ./pkgs {
         pkgs = nixpkgs.legacyPackages.${system};
         pkgsSelf = self.legacyPackages.${system};
-        utils = nix-utils.legacyPackages.${system}.lib;
+        utils = nix-utils.legacyPackages.${system};
       });
     formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
     defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.mk-ruby-squib-env);
