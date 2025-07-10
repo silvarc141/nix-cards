@@ -1,6 +1,5 @@
 {
   lib,
-  paths,
   writeShellScriptBin,
   pkg-config,
   ruby,
@@ -17,9 +16,8 @@
   glib,
   imagemagick, # for mini_magick
   makeFontsConf,
-  liberation_ttf,
   ...
-}: let
+}: fontDirectories: let
   gemConfig =
     defaultGemConfig
     // {
@@ -34,12 +32,7 @@
     inherit gemConfig;
     gemdir = ./.;
   };
-  fontsConf = makeFontsConf {
-    fontDirectories = [
-      liberation_ttf
-      paths.fonts
-    ];
-  };
+  fontsConf = makeFontsConf { inherit fontDirectories; };
   runtimeInputs = [
     gems
     ruby
