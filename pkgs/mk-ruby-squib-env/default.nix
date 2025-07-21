@@ -32,7 +32,7 @@
     inherit gemConfig;
     gemdir = ./.;
   };
-  fontsConf = makeFontsConf { inherit fontDirectories; };
+  fontsConf = makeFontsConf {inherit fontDirectories;};
   runtimeInputs = [
     gems
     ruby
