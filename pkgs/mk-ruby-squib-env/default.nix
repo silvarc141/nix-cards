@@ -1,62 +1,86 @@
 {
   lib,
-  writeShellScriptBin,
-  pkg-config,
   ruby,
-  rake,
-  defaultGemConfig,
   bundlerEnv,
-  gobject-introspection,
-  gobject-introspection-unwrapped,
-  cairo,
-  pango,
-  gdk-pixbuf,
-  librsvg,
-  harfbuzz,
-  glib,
-  imagemagick, # for mini_magick
   makeFontsConf,
+  defaultGemConfig,
+  stdenv,
+  fetchurl,
+  buildEnv,
+
+  pkg-config,
+  rake,
+  bundler,
+  gnumake,
+  git,
+  gnutar,
+  gzip,
+
+  cairo,
+  gdk-pixbuf,
+  glib,
+  gobject-introspection,
+  pango,
+  librsvg,
+  libxml2,
+  libxslt,
+
+  imagemagick,
   ...
 }: fontDirectories: let
-  gemConfig =
-    defaultGemConfig
-    // {
-      rsvg2 = attrs: {
-        nativeBuildInputs = [pkg-config rake];
-        buildInputs = [librsvg];
-      };
-    };
-  gems = bundlerEnv {
-    name = "squib";
-    inherit ruby;
-    inherit gemConfig;
-    gemdir = ./.;
-  };
-  fontsConf = makeFontsConf {inherit fontDirectories;};
-  runtimeInputs = [
-    gems
-    ruby
-    gobject-introspection
-    gobject-introspection-unwrapped
-    cairo
-    pango
-    gdk-pixbuf
-    librsvg
-    harfbuzz
-    glib
-    imagemagick
-  ];
-in
-  writeShellScriptBin "ruby"
-  #sh
-  ''
-    export PATH="${lib.makeBinPath runtimeInputs}:$PATH"
-    export LD_LIBRARY_PATH="${lib.makeLibraryPath runtimeInputs}:$LD_LIBRARY_PATH"
-    export GI_TYPELIB_PATH="${lib.makeSearchPathOutput "lib" "lib/girepository-1.0" runtimeInputs}:$GI_TYPELIB_PATH"
-    export GEM_PATH="${lib.makeSearchPathOutput "lib" "lib/ruby/gems/3.3.0" runtimeInputs}:$GEM_PATH"
-    export XDG_CACHE_HOME="$(mktemp -d)"
-    export FONTCONFIG_FILE="$XDG_CACHE_HOME/fonts.conf"
-    cp "${fontsConf}" "$FONTCONFIG_FILE"
+  allNativeBuildInputs = [
+    pkg-config
+    rake
+    bundler
+    gnumake
+    git
+  ] ++ lib.unique (
+    [ cairo gdk-pixbuf glib gobject-introspection pango librsvg libxml2 libxslt ]
+    ++ cairo.propagatedBuildInputs
+    ++ gdk-pixbuf.propagatedBuildInputs
+    ++ glib.propagatedBuildInputs
+    ++ gobject-introspection.propagatedBuildInputs
+    ++ pango.propagatedBuildInputs
+    ++ librsvg.propagatedBuildInputs
+  );
 
-    ${ruby}/bin/ruby "$@"
-  ''
+  rsvg2-patched = stdenv.mkDerivation {
+    pname = "rsvg2-patched-source";
+    version = "4.2.9";
+    src = fetchurl {
+      url = "https://rubygems.org/gems/rsvg2-4.2.9.gem";
+      sha256 = "1sq0j1jy16m63a9hnsf01dszyrzd1asg0qpyb8fws14abh7vc8dx";
+    };
+    nativeBuildInputs = [ gnutar gzip ];
+    unpackPhase = ''
+      tar xf $src
+      tar xzf data.tar.gz
+    '';
+    patchPhase = ''
+      substituteInPlace rsvg2.gemspec \
+        --replace '"dependency-check/Rakefile"' '"ext/rsvg2/extconf.rb"'
+    '';
+    installPhase = ''
+      mkdir -p $out
+      cp -R . $out
+    '';
+  };
+
+  gems = bundlerEnv {
+    name = "squib-env-base"; # Renamed
+    inherit ruby;
+    gemdir = ./.;
+    nativeBuildInputs = allNativeBuildInputs;
+    gemConfig = defaultGemConfig // {
+      rsvg2 = _: { source = { type = "path"; path = rsvg2-patched; }; };
+    };
+    meta.dependencies = [
+      imagemagick
+      (makeFontsConf { inherit fontDirectories; })
+    ];
+  };
+in
+  buildEnv {
+    name = "squib-environment";
+    paths = [ gems ];
+  }

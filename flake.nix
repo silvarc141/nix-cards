@@ -28,5 +28,19 @@
       });
     formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
     defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.squib-environment);
-  in {inherit formatter legacyPackages defaultPackage;};
+    devShell = genAttrs allSystems (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        squibEnv = self.legacyPackages.${system}.squib-environment;
+      in
+      pkgs.mkShell {
+        packages = [ squibEnv ];
+        shellHook = ''
+          export PATH="${squibEnv}/bin:$PATH"
+        '';
+      }
+    );
+  in {
+    inherit formatter legacyPackages defaultPackage devShell;
+  };
 }
