@@ -1,4 +1,4 @@
 *.rb
+*.test
 result
-*test*
 _output
