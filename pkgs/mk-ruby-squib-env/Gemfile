@@ -1,4 +1,7 @@
+# This file now ONLY lists squib's dependencies, NOT squib itself.
+# We are providing squib from a separate Nix package.
 source 'https://rubygems.org'
+
 gem 'squib'
 gem 'bigdecimal'
 gem 'abbrev'

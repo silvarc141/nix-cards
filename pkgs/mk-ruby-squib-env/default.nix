@@ -1,8 +1,7 @@
 {
   lib,
-  fetchgit,
-  git,
-  buildRubyGem,
+  stdenv,
+  fetchFromGitHub,
   writeShellScriptBin,
   pkg-config,
   ruby,
@@ -16,43 +15,48 @@
   librsvg,
   harfbuzz,
   glib,
-  imagemagick, # for mini_magick
+  imagemagick,
   makeFontsConf,
   ...
 }: fontDirectories: let
-  squib-git = buildRubyGem {
-    pname = "squib-git";
-    gemName = "squib";
-    version = "0.19.0-dev";
-    src = fetchgit {
-      url = "https://github.com/andymeneely/squib.git";
-      rev = "d052e1f2cd2a36791dd540441db4e5c64bd3b365";
-      sha256 = "sha256-GHf6G2nKcO7yDvPGka6hJfSI77n+9p2VpzbonkamJwc=";
+  squib-fork = stdenv.mkDerivation {
+    pname = "squib-fork";
+    version = "0.20.0a";
+    
+    src = fetchFromGitHub {
+      owner = "silvarc141";
+      repo = "squib";
+      rev = "85d185ba8772decdbe6469f2b73e29fa4a931d6c";
+      sha256 = "sha256-TwmZdeLiR+q/qDx1VSKpNgEHN7zET3KB9tIDkdyGOQY=";
     };
-    nativeBuildInputs = [ git ]; # Needed for the gemspec
+    
+    nativeBuildInputs = [ ruby ];
+
+    installPhase = ''
+      mkdir -p $out
+      cp -r . $out/
+    '';
   };
 
-  gemConfig =
-    defaultGemConfig
-    // {
+  rubyEnv = bundlerEnv {
+    name = "squib-env-final";
+    inherit ruby;
+    gemdir = ./.;
+    gemConfig = defaultGemConfig // {
       rsvg2 = attrs: {
         nativeBuildInputs = [pkg-config rake];
         buildInputs = [librsvg];
       };
+      squib = attrs: {
+        src = squib-fork;
+      };
     };
-  
-  vendorGems = bundlerEnv {
-    name = "squib-vendor-gems";
-    inherit ruby;
-    inherit gemConfig;
-    gemdir = ./.;
   };
 
   fontsConf = makeFontsConf { inherit fontDirectories; };
   
   runtimeInputs = [
-    squib-git
-    vendorGems
+    rubyEnv
     ruby
     gobject-introspection
     cairo
@@ -67,14 +71,11 @@ in
   writeShellScriptBin "ruby"
   #sh
   ''
-    ulimit -n 65536 2>/dev/null
+    ulimit -n 65536 2/dev/null
     export PATH="${lib.makeBinPath runtimeInputs}:$PATH"
     export LD_LIBRARY_PATH="${lib.makeLibraryPath runtimeInputs}:$LD_LIBRARY_PATH"
     export GI_TYPELIB_PATH="${lib.makeSearchPathOutput "lib" "lib/girepository-1.0" runtimeInputs}:$GI_TYPELIB_PATH"
-    
-    # GEM_PATH that puts git-built squib first
-    export GEM_PATH="${squib-git}/lib/ruby/gems/3.3.0:${vendorGems}/lib/ruby/gems/3.3.0"
-
+    export GEM_PATH="${rubyEnv}/lib/ruby/gems/3.3.0"
     export G_MESSAGES_DEBUG=all
     export XDG_CACHE_HOME="$(mktemp -d)"
     export FONTCONFIG_FILE="$XDG_CACHE_HOME/fonts.conf"
