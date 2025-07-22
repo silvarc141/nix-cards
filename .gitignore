@@ -1,0 +1,4 @@
+*.rb
+result
+*test*
+_output
