@@ -26,8 +26,8 @@
     src = fetchFromGitHub {
       owner = "silvarc141";
       repo = "squib";
-      rev = "85d185ba8772decdbe6469f2b73e29fa4a931d6c";
-      sha256 = "sha256-TwmZdeLiR+q/qDx1VSKpNgEHN7zET3KB9tIDkdyGOQY=";
+      rev = "e5324bf741d8f9f63f15dd62af7d0ed144b7e33c";
+      sha256 = "sha256-ioIpzYZ82596JwOUntvpYZIKtvOTC/ERX/vasQNc1TA=";
     };
     
     nativeBuildInputs = [ ruby ];
