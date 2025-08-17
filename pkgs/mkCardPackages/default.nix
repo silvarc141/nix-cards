@@ -39,6 +39,35 @@
       '${csvDirectory}/${cardType}.csv'
   '';
 
+  init = 
+    #ruby
+    ''
+      $output_dir, 
+      $graphics_path, 
+      $specific_graphics_path, 
+      $csv_path,
+      src_path, 
+
+      $output_variant, 
+      $card_type, 
+      $card_side, 
+
+      $LOAD_PATH.unshift(src_path)
+
+      script_name = "#{$card_type}-#{$card_side}.rb"
+      puts "-> Initializing deck generation for: #{script_name}"
+      target_script_file = File.join(src_path, "#{script_name}")
+
+      if File.exist?(target_script_file)
+        require target_script_file
+      else
+        puts "Error: Target script not found at '#{target_script_file}'"
+        exit 1
+      end
+
+      puts "-> Finished deck generation for: #{script_name}"
+    '';
+
   mkRunCommand = name: cardTypes: sides: variant:
     runCommand name {} ''
       mkdir -p $out
