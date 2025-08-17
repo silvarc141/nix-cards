@@ -2,6 +2,7 @@
   lib,
   runCommand,
   mkRubySquibEnv,
+  ...
 }: {
   cardTypes,
   graphicsDir,
