@@ -22,15 +22,15 @@
   squib-fork = stdenv.mkDerivation {
     pname = "squib-fork";
     version = "0.20.0a";
-    
+
     src = fetchFromGitHub {
       owner = "silvarc141";
       repo = "squib";
       rev = "85d185ba8772decdbe6469f2b73e29fa4a931d6c";
       sha256 = "sha256-TwmZdeLiR+q/qDx1VSKpNgEHN7zET3KB9tIDkdyGOQY=";
     };
-    
-    nativeBuildInputs = [ ruby ];
+
+    nativeBuildInputs = [ruby];
 
     installPhase = ''
       mkdir -p $out
@@ -42,19 +42,21 @@
     name = "squib-env-final";
     inherit ruby;
     gemdir = ./.;
-    gemConfig = defaultGemConfig // {
-      rsvg2 = attrs: {
-        nativeBuildInputs = [pkg-config rake];
-        buildInputs = [librsvg];
+    gemConfig =
+      defaultGemConfig
+      // {
+        rsvg2 = attrs: {
+          nativeBuildInputs = [pkg-config rake];
+          buildInputs = [librsvg];
+        };
+        squib = attrs: {
+          src = squib-fork;
+        };
       };
-      squib = attrs: {
-        src = squib-fork;
-      };
-    };
   };
 
-  fontsConf = makeFontsConf { inherit fontDirectories; };
-  
+  fontsConf = makeFontsConf {inherit fontDirectories;};
+
   runtimeInputs = [
     rubyEnv
     ruby
