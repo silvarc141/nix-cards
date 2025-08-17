@@ -1,7 +1,7 @@
 {
-  mk-ruby-squib-env,
   lib,
   runCommand,
+  mkRubySquibEnv,
 }: {
   cardTypes,
   graphicsDir,
@@ -26,7 +26,7 @@
   allSides = sides ++ ["both"];
 
   mkRunLine = variant: cardType: side: ''
-    ${getExe (mk-ruby-squib-env fontDirs)} \
+    ${getExe (mkRubySquibEnv fontDirs)} \
       '${root + "/init.rb"}' \
       "$out" \
       '${graphicsDir}' \
