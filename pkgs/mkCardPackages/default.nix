@@ -1,13 +1,13 @@
 {
   lib,
   runCommand,
-  mkRubySquibEnv,
+  ruby-squib-env,
   ...
 }: {
   cardTypes,
-  graphicsDir,
-  csvDir,
-  fontDirs ? [],
+  graphicsDirectory,
+  csvDirectory,
+  fontDirectories ? [],
   root ? ./.,
   variants ? [
     "pdf"
@@ -21,22 +21,19 @@
 }: let
   inherit (lib) getExe concatLines;
   inherit (builtins) listToAttrs concatMap;
-  baseName = baseNameOf root;
-
-  sides = [ "front" "back" ];
-  allSides = sides ++ ["both"];
+  ruby = getExe (ruby-squib-env.override { inherit fontDirectories; });
 
   mkRunLine = variant: cardType: side: ''
-    ${getExe (mkRubySquibEnv fontDirs)} \
+    ${ruby} \
       '${root + "/init.rb"}' \
       "$out" \
-      '${graphicsDir}' \
-      '${graphicsDir}/${cardType}-${side}' \
+      '${graphicsDirectory}' \
+      '${graphicsDirectory}/${cardType}-${side}' \
       '${variant}' \
       '${cardType}' \
       '${side}' \
       '${root}' \
-      '${csvDir}/${cardType}.csv'
+      '${csvDirectory}/${cardType}.csv'
   '';
 
   mkRunCommand = name: cardTypes: sides: variant:
@@ -47,6 +44,10 @@
         )
         cardTypes)}
     '';
+
+  baseName = baseNameOf root;
+  sides = [ "front" "back" ];
+  allSides = sides ++ ["both"];
 
   expandSide = side:
     if side == "both"

@@ -17,8 +17,10 @@
   glib,
   imagemagick,
   makeFontsConf,
+  fontDirectories ? [],
+  extraPackages ? [],
   ...
-}: fontDirectories: let
+}: let
   squib-fork = stdenv.mkDerivation {
     pname = "squib-fork";
     version = "0.20.0a";
@@ -68,7 +70,7 @@
     harfbuzz
     glib
     imagemagick
-  ];
+  ] ++ extraPackages;
 in
   writeShellScriptBin "ruby"
   #sh

@@ -27,6 +27,6 @@
         utils = nix-utils.legacyPackages.${system};
       });
     formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
-    defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.squib-environment);
+    defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.ruby-squib-env);
   in {inherit formatter legacyPackages defaultPackage;};
 }
