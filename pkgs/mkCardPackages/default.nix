@@ -7,8 +7,9 @@
   cardTypes,
   graphicsDirectory,
   csvDirectory,
+  rubySourceDirectory,
+  extraPackages ? [],
   fontDirectories ? [],
-  root ? ./.,
   variants ? [
     "pdf"
     "pdf-pnp"
@@ -21,18 +22,20 @@
 }: let
   inherit (lib) getExe concatLines;
   inherit (builtins) listToAttrs concatMap;
-  ruby = getExe (ruby-squib-env.override { inherit fontDirectories; });
+  ruby = getExe (ruby-squib-env.override { 
+    inherit fontDirectories extraPackages;
+  });
 
   mkRunLine = variant: cardType: side: ''
     ${ruby} \
-      '${root + "/init.rb"}' \
+      '${rubySourceDirectory + "/init.rb"}' \
       "$out" \
       '${graphicsDirectory}' \
       '${graphicsDirectory}/${cardType}-${side}' \
       '${variant}' \
       '${cardType}' \
       '${side}' \
-      '${root}' \
+      '${rubySourceDirectory}' \
       '${csvDirectory}/${cardType}.csv'
   '';
 
@@ -45,7 +48,7 @@
         cardTypes)}
     '';
 
-  baseName = baseNameOf root;
+  baseName = baseNameOf rubySourceDirectory;
   sides = [ "front" "back" ];
   allSides = sides ++ ["both"];
 

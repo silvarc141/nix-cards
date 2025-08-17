@@ -15,7 +15,6 @@
   librsvg,
   harfbuzz,
   glib,
-  imagemagick,
   makeFontsConf,
   fontDirectories ? [],
   extraPackages ? [],
@@ -69,7 +68,6 @@
     librsvg
     harfbuzz
     glib
-    imagemagick
   ] ++ extraPackages;
 in
   writeShellScriptBin "ruby"
