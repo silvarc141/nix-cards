@@ -4,7 +4,7 @@ A4_WIDTH = 2490
 A4_HEIGHT = 3510
 
 def save_variants(printer_margin = 28, bleed = '1c')
-  construct_output($output_dir, $output_variant, "cards-#{$card_type}-#{$card_side}", $card_side == 'back', printer_margin, bleed)
+  construct_output($output_dir, $output_variant, "#{$game_name}-#{$card_type}-#{$card_side}", $card_side == 'back', printer_margin, bleed)
 end
 
 def construct_output(output_dir, variant, prefix, back, printer_margin, bleed)
