@@ -43,7 +43,7 @@
         src_path = '${rubySourceDirectory}'
 
         $LOAD_PATH.unshift(src_path)
-        $LOAD_PATH.unshift(${utils-ruby})
+        $LOAD_PATH.unshift('${utils-ruby}')
 
         require 'squib'
         require 'shared'
