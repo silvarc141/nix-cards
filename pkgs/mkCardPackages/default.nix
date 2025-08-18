@@ -61,7 +61,7 @@
         puts "-> Finished deck generation for: #{script_name}"
       '';
   in ''
-    ${ruby} "$out" '${initScript}' '${csvDirectory}/${cardType}.csv'
+    ${ruby} '${initScript}' "$out" '${csvDirectory}/${cardType}.csv'
   '';
 
   mkRunCommand = name: cardTypes: sides: variant:
