@@ -34,12 +34,12 @@
       ''
         $output_dir, $csv_path, *rest = ARGV
 
-        $root_graphics_path = ${graphicsDirectory}
+        $root_graphics_path = '${graphicsDirectory}'
         $local_graphics_path = '${graphicsDirectory}/${cardType}-${side}'
-        $output_variant = ${variant}
-        $card_type = ${cardType}
-        $card_side = ${side}
-        src_path = ${rubySourceDirectory}
+        $output_variant = '${variant}'
+        $card_type = '${cardType}'
+        $card_side = '${side}'
+        src_path = '${rubySourceDirectory}'
 
         $LOAD_PATH.unshift(src_path)
 
