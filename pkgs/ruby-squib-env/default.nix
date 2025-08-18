@@ -58,17 +58,19 @@
 
   fontsConf = makeFontsConf {inherit fontDirectories;};
 
-  runtimeInputs = [
-    rubyEnv
-    ruby
-    gobject-introspection
-    cairo
-    pango
-    gdk-pixbuf
-    librsvg
-    harfbuzz
-    glib
-  ] ++ extraPackages;
+  runtimeInputs =
+    [
+      rubyEnv
+      ruby
+      gobject-introspection
+      cairo
+      pango
+      gdk-pixbuf
+      librsvg
+      harfbuzz
+      glib
+    ]
+    ++ extraPackages;
 in
   writeShellScriptBin "ruby"
   #sh
