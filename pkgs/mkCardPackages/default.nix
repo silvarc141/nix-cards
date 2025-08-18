@@ -3,6 +3,7 @@
   runCommand,
   ruby-squib-env,
   writeText,
+  utils-ruby,
   ...
 }: {
   cardTypes,
@@ -42,8 +43,8 @@
         src_path = '${rubySourceDirectory}'
 
         $LOAD_PATH.unshift(src_path)
+        $LOAD_PATH.unshift(${utils-ruby})
 
-        require '${./lib.rb}'
         require 'squib'
         require 'shared'
 
