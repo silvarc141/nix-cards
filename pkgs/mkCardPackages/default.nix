@@ -38,10 +38,13 @@
 
         $root_graphics_path = '${graphicsDirectory}'
         $local_graphics_path = '${graphicsDirectory}/${cardType}-${side}'
+        $shared_graphics_path = '${graphicsDirectory}/shared'
+        $game_name = '${gameName}'
+
         $output_variant = '${variant}'
         $card_type = '${cardType}'
         $card_side = '${side}'
-        $game_name = '${gameName}'
+
         src_path = '${rubySourceDirectory}'
 
         $LOAD_PATH.unshift(src_path)
