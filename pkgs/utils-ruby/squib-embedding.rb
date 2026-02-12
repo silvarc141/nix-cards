@@ -6,15 +6,17 @@ require 'mini_magick'
 require 'tempfile'
 
 class IconEmbedder
-  def initialize(icons_directory)
+  def initialize(icons_directory, delimiter_start: '[', delimiter_end: ']')
     @icons_directory = icons_directory
+    @delimiter_start = delimiter_start
+    @delimiter_end = delimiter_end
     @svg_data_cache = {}
     @png_path_cache = {}
     @temp_files = []
   end
 
-  def run(embed, text_string_or_array, font_size: 8, scale: 1, prerender: false, dry_run: false, delimiter_start: '[', delimiter_end: ']')
-    keys_in_use = Array(text_string_or_array).join.scan(/#{Regexp.escape(delimiter_start)}[a-zA-Z0-9_-]+#{Regexp.escape(delimiter_end)}/).uniq
+  def run(embed, text_string_or_array, font_size: 8, scale: 1, prerender: false, dry_run: false)
+    keys_in_use = Array(text_string_or_array).join.scan(/#{Regexp.escape(@delimiter_start)}[a-zA-Z0-9_-]+#{Regexp.escape(@delimiter_end)}/).uniq
     return if keys_in_use.empty?
 
     transform = get_icon_transform(font_size: font_size, scale: scale)
@@ -73,7 +75,7 @@ class IconEmbedder
 
   def run_svg(embed, keys, transform, dry_run)
     keys.each do |key|
-      icon_name = key.delete(':').to_sym
+      icon_name = key.delete(@delimiter_start).delete(@delimiter_end).to_sym
       svg_data = get_svg_data(icon_name)
 
       next if svg_data.nil? || svg_data.strip.empty?
@@ -107,7 +109,7 @@ class IconEmbedder
   def get_prerendered_png_path(key, pixel_dims)
     cache_key = "#{key}_#{pixel_dims[:width]}x#{pixel_dims[:height]}"
     @png_path_cache[cache_key] ||= begin
-      icon_name = key.delete(':').to_sym
+      icon_name = key.delete(@delimiter_start).delete(@delimiter_end).to_sym
       svg_data = get_svg_data(icon_name)
 
       return nil if svg_data.nil? || svg_data.strip.empty?
