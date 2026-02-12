@@ -15,6 +15,23 @@ class IconEmbedder
     @temp_files = []
   end
 
+  # Inserts zero width character at the start of each line to work around the following squib issue:
+  # If only icons are in a line it's height is treated as zero (relevant for text centering and such).
+  def fix_line_height(text_string_or_array)
+    ZERO_WIDTH_SPACE = "\u200b"
+
+    def inject_zero_width(str)
+      return str if str.nil?
+      str.to_s.gsub(/^/, ZERO_WIDTH_SPACE)
+    end
+
+    if text_string_or_array.is_a?(Array)
+      text_string_or_array.map { |str| inject_zero_width(str) }
+    else
+      inject_zero_width(text_string_or_array)
+    end
+  end
+
   def run(embed, text_string_or_array, font_size: 8, scale: 1, prerender: false, dry_run: false)
     keys_in_use = Array(text_string_or_array).join.scan(/#{Regexp.escape(@delimiter_start)}[a-zA-Z0-9_-]+#{Regexp.escape(@delimiter_end)}/).uniq
     return if keys_in_use.empty?
@@ -59,15 +76,16 @@ class IconEmbedder
     end
   end
 
+  # after trial and error this works, TODO: why magic numbers?
   def get_icon_transform(font_size:, scale: 1)
-    ratio = 0.1 * scale
+    ratio = 0.1 * scale # why magic number?
     size_in_cells = font_size * ratio
     {
       width_c: size_in_cells,
       height_c: size_in_cells,
       width: "#{size_in_cells}c",
       height: "#{size_in_cells}c",
-      dy: "-#{size_in_cells * (1 - ratio * 1.5)}c"
+      dy: "-#{size_in_cells * (1 - ratio * 1.5)}c" # why magic number?
     }
   end
 
