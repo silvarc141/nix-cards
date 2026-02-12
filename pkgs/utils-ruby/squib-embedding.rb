@@ -13,7 +13,7 @@ class IconEmbedder
     @temp_files = []
   end
 
-  def run(embed, text_string_or_array, font_size: 8, scale: 1, prerender: false, dry_run: false, delimiter_start: '[', delimiter_end ']')
+  def run(embed, text_string_or_array, font_size: 8, scale: 1, prerender: false, dry_run: false, delimiter_start: '[', delimiter_end: ']')
     keys_in_use = Array(text_string_or_array).join.scan(/#{Regexp.escape(delimiter_start)}[a-zA-Z0-9_-]+#{Regexp.escape(delimiter_end)}/).uniq
     return if keys_in_use.empty?
 
