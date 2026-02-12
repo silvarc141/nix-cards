@@ -13,15 +13,15 @@ class IconEmbedder
     @temp_files = []
   end
 
-  def run(embed, text_string_or_array, font_size: 8, scale: 1, prerender: false, dry_run: false)
-    keys_in_use = Array(text_string_or_array).join.scan(/:[a-zA-Z0-9_-]+:/).uniq
+  def run(embed, text_string_or_array, font_size: 8, scale: 1, prerender: false, dry_run: false, delimiter_start: '[', delimiter_end ']')
+    keys_in_use = Array(text_string_or_array).join.scan(/#{Regexp.escape(delimiter_start)}[a-zA-Z0-9_-]+#{Regexp.escape(delimiter_end)}/).uniq
     return if keys_in_use.empty?
 
     transform = get_icon_transform(font_size: font_size, scale: scale)
 
     if prerender
       pixel_dims = {
-        width: (300 * transform[:width_c]).round.clamp(1, nil),  # Ensure at least 1px
+        width: (300 * transform[:width_c]).round.clamp(1, nil), # Ensure at least 1px
         height: (300 * transform[:height_c]).round.clamp(1, nil) # Ensure at least 1px
       }
       run_png(embed, keys_in_use, transform, pixel_dims, dry_run)
