@@ -15,11 +15,11 @@ class IconEmbedder
     @temp_files = []
   end
 
+  ZERO_WIDTH_SPACE = "\u200b"
+
   # Inserts zero width character at the start of each line to work around the following squib issue:
   # If only icons are in a line it's height is treated as zero (relevant for text centering and such).
   def fix_line_height(text_string_or_array)
-    ZERO_WIDTH_SPACE = "\u200b"
-
     def inject_zero_width(str)
       return str if str.nil?
       str.to_s.gsub(/^/, ZERO_WIDTH_SPACE)
