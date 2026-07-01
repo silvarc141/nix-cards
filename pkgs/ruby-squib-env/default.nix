@@ -82,10 +82,9 @@ writeShellScriptBin "ruby"
     export GI_TYPELIB_PATH="${
       lib.makeSearchPathOutput "lib" "lib/girepository-1.0" runtimeInputs
     }:$GI_TYPELIB_PATH"
-    export GEM_PATH="${rubyEnv}/lib/ruby/gems/3.3.0"
     export G_MESSAGES_DEBUG=all
     export XDG_CACHE_HOME="$(mktemp -d)"
     export FONTCONFIG_FILE="$XDG_CACHE_HOME/fonts.conf"
     cp "${fontsConf}" "$FONTCONFIG_FILE"
-    exec ${ruby}/bin/ruby "$@"
+    exec ${rubyEnv.wrappedRuby}/bin/ruby "$@"
   ''
