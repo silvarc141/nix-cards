@@ -30,10 +30,22 @@
           utils = nix-utils.legacyPackages.${system};
         }
       );
+      checks = genAttrs allSystems (
+        system:
+        import ./checks.nix {
+          pkgs = nixpkgs.legacyPackages.${system};
+          pkgsSelf = self.legacyPackages.${system};
+        }
+      );
       formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
       defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.ruby-squib-env);
     in
     {
-      inherit formatter legacyPackages defaultPackage;
+      inherit
+        formatter
+        legacyPackages
+        defaultPackage
+        checks
+        ;
     };
 }

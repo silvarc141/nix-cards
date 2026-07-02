@@ -3,4 +3,4 @@
   utils,
   ...
 }:
-utils.callPackagesInDirectory ./. pkgsSelf
+utils.callPackagesInDirectory ./. (pkgsSelf // utils)

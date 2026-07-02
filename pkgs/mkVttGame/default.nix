@@ -1,16 +1,15 @@
 {
   lib,
-  runCommand,
-  nushell,
   zip,
   runCommandNu,
+  ...
 }:
 {
-  name,
+  gameName,
   images,
 }:
 runCommandNu (baseNameOf ./.) { } ''
   $env.PATH = $env.PATH | append "${zip}/bin"
   source ${./lib.nu}
-  packageImagesAsVttGame ${images} $out ${name}
+  packageImagesAsVttGame ${images} $out ${gameName}
 ''
