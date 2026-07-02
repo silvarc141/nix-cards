@@ -15,7 +15,7 @@ def createCardInstanceData [ cards: table ] {
       cardType: $"($in.deck)($in.index)",
       parent: $"($in.deck)Pile"
     }
-  } | group-by id
+  } | reduce -f {} {|row, acc| $acc | insert $row.id $row }
 }
 
 def createDeckStruct [ cards: table, name: string, width: int, height: int, x: int, y: int ] {
@@ -57,7 +57,8 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
               type: "image", 
               width: $width, 
               height: $height, 
-              dynamicProperties: { value: "front" } 
+              valueType: "dynamic",
+              value: "path",
             }
           ] 
         }
@@ -67,7 +68,8 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
               type: "image", 
               width: $width, 
               height: $height, 
-              dynamicProperties: { value: "back" } 
+              valueType: "dynamic",
+              value: "path",
             }
           ] 
         },
@@ -78,7 +80,7 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
 
 def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
   mkdir staging/assets
-  glob $"($imagesDir)/*.png" | each { cp $in staging/assets/ }
+  glob $"($imagesDir)/*.png" | each { cp -f $in staging/assets/ }
 
   let cards = parseCardImageFiles staging/assets/
   let cardInstanceStructs = createCardInstanceData $cards
