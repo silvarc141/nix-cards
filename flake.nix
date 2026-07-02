@@ -30,7 +30,7 @@
           utils = nix-utils.legacyPackages.${system};
         }
       );
-      formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
+      formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
       defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.ruby-squib-env);
     in
     {

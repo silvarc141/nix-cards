@@ -5,13 +5,14 @@
   writeText,
   utils-ruby,
   ...
-}: {
+}:
+{
   cardTypes,
   graphicsDirectory,
   csvDirectory,
   rubySourceDirectory,
-  extraPackages ? [],
-  fontDirectories ? [],
+  extraPackages ? [ ],
+  fontDirectories ? [ ],
   variants ? [
     "pdf"
     "pdf-pnp"
@@ -22,102 +23,109 @@
     "single"
   ],
   gameName ? "cards",
-}: let
+}:
+let
   inherit (lib) getExe concatLines;
   inherit (builtins) listToAttrs concatMap;
-  ruby = getExe (ruby-squib-env.override {
-    inherit fontDirectories extraPackages;
-  });
+  ruby = getExe (
+    ruby-squib-env.override {
+      inherit fontDirectories extraPackages;
+    }
+  );
 
-  mkRunLine = variant: cardType: side: let
-    initScript =
-      writeText "init.rb"
-      #ruby
-      ''
-        $output_dir, $csv_path, *rest = ARGV
+  mkRunLine =
+    variant: cardType: side:
+    let
+      initScript =
+        writeText "init.rb"
+          #ruby
+          ''
+            $output_dir, $csv_path, *rest = ARGV
 
-        $root_graphics_path = '${graphicsDirectory}'
-        $local_graphics_path = '${graphicsDirectory}/${cardType}-${side}'
-        $shared_graphics_path = '${graphicsDirectory}/shared'
-        $game_name = '${gameName}'
+            $root_graphics_path = '${graphicsDirectory}'
+            $local_graphics_path = '${graphicsDirectory}/${cardType}-${side}'
+            $shared_graphics_path = '${graphicsDirectory}/shared'
+            $game_name = '${gameName}'
 
-        $output_variant = '${variant}'
-        $card_type = '${cardType}'
-        $card_side = '${side}'
+            $output_variant = '${variant}'
+            $card_type = '${cardType}'
+            $card_side = '${side}'
 
-        src_path = '${rubySourceDirectory}'
+            src_path = '${rubySourceDirectory}'
 
-        $LOAD_PATH.unshift(src_path)
-        $LOAD_PATH.unshift('${utils-ruby}')
+            $LOAD_PATH.unshift(src_path)
+            $LOAD_PATH.unshift('${utils-ruby}')
 
-        require 'squib'
-        require 'shared'
+            require 'squib'
+            require 'shared'
 
-        script_name = "#{$card_type}-#{$card_side}.rb"
-        puts "-> Initializing deck generation for: #{script_name}"
-        target_script_file = File.join(src_path, "#{script_name}")
+            script_name = "#{$card_type}-#{$card_side}.rb"
+            puts "-> Initializing deck generation for: #{script_name}"
+            target_script_file = File.join(src_path, "#{script_name}")
 
-        if File.exist?(target_script_file)
-          require target_script_file
-        else
-          puts "Error: Target script not found at '#{target_script_file}'"
-          exit 1
-        end
+            if File.exist?(target_script_file)
+              require target_script_file
+            else
+              puts "Error: Target script not found at '#{target_script_file}'"
+              exit 1
+            end
 
-        puts "-> Finished deck generation for: #{script_name}"
-      '';
-  in ''
-    ${ruby} '${initScript}' "$out" '${csvDirectory}/${cardType}.csv'
-  '';
+            puts "-> Finished deck generation for: #{script_name}"
+          '';
+    in
+    ''
+      ${ruby} '${initScript}' "$out" '${csvDirectory}/${cardType}.csv'
+    '';
 
-  mkRunCommand = name: cardTypes: sides: variant:
-    runCommand name {} ''
+  mkRunCommand =
+    name: cardTypes: sides: variant:
+    runCommand name { } ''
       mkdir -p $out
-      ${concatLines (map (
-          cardType: (concatLines (map (mkRunLine variant cardType) sides))
-        )
-        cardTypes)}
+      ${concatLines (map (cardType: (concatLines (map (mkRunLine variant cardType) sides))) cardTypes)}
     '';
 
   baseName = baseNameOf rubySourceDirectory;
-  sides = ["front" "back"];
-  allSides = sides ++ ["both"];
+  sides = [
+    "front"
+    "back"
+  ];
+  allSides = sides ++ [ "both" ];
 
-  expandSide = side:
-    if side == "both"
-    then sides
-    else [side];
+  expandSide = side: if side == "both" then sides else [ side ];
 
   packagesMetaAll = listToAttrs (
     concatMap (
       side:
-        map (variant: let
+      map (
+        variant:
+        let
           name = "${baseName}-all-${side}-${variant}";
-        in {
+        in
+        {
           inherit name;
           value = mkRunCommand name cardTypes (expandSide side) variant;
-        })
-        variants
-    )
-    allSides
+        }
+      ) variants
+    ) allSides
   );
 
   packages = listToAttrs (
     concatMap (
       cardType:
-        concatMap (
-          side:
-            map (variant: let
-              name = "${baseName}-${cardType}-${side}-${variant}";
-            in {
-              inherit name;
-              value = mkRunCommand name [cardType] (expandSide side) variant;
-            })
-            variants
-        )
-        allSides
-    )
-    cardTypes
+      concatMap (
+        side:
+        map (
+          variant:
+          let
+            name = "${baseName}-${cardType}-${side}-${variant}";
+          in
+          {
+            inherit name;
+            value = mkRunCommand name [ cardType ] (expandSide side) variant;
+          }
+        ) variants
+      ) allSides
+    ) cardTypes
   );
 in
-  packages // packagesMetaAll
+packages // packagesMetaAll
