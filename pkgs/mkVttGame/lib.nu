@@ -1,8 +1,8 @@
-def parseCardImageFiles [ dir: path ] {
-  glob ($dir | path join '*.png') | path basename | each { 
-    let path = $in
-    let parsed = $path | parse --regex '(?<game>[a-z]*)-(?<deck>[a-z]*)-(?<side>[a-z]*)(?<index>\d*)'
-    $parsed | insert "path" $path | reject game
+def parseCardImageNames [ cardImageNames : list<string> ] {
+  $cardImageNames | each {
+    let name = $in
+    let parsed = $name | parse --regex '(?<game>[a-z]*)-(?<deck>[a-z]*)-(?<side>[a-z]*)(?<index>\d*)'
+    $parsed | insert name $name | reject game
   } | flatten
 }
 
@@ -20,11 +20,12 @@ def createCardInstanceData [ cards: table ] {
 
 def createDeckStruct [ cards: table, name: string, width: int, height: int, x: int, y: int ] {
   let cardTypes = $cards
-  | update path {|x| $"/assets/($x.path)"}
+  | insert path {|x| $"/assets/($x.name).webp"}
+  | reject name
   | group-by index --prune 
-  | items { |key,value| { 
-    name: $"($name)($key)", 
-    sides: ($value | transpose -rd) } 
+  | items { |cardId,cardData| { 
+    name: $"($name)($cardId)",
+    sides: ($cardData | transpose -rd) } 
   } | transpose -rd
 
   {
@@ -48,6 +49,20 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
       cardDefaults: {
         width: $width,
         height: $height,
+        color: "transparent",
+        enlarge: 3,
+        clickRoutine: [
+          {
+            func: "FLIP",
+            collection: "thisButton"
+          }
+        ],
+        doubleClickRoutine: [
+          {
+            func: "ROTATE",
+            collection: "thisButton"
+          }
+        ],
       },
       cardTypes: $cardTypes,
       faceTemplates: [
@@ -55,10 +70,9 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
           objects: [
             { 
               type: "image", 
-              width: $width, 
-              height: $height, 
-              valueType: "dynamic",
-              value: "path",
+              dynamicProperties: {
+                value: "front"
+              }
             }
           ] 
         }
@@ -66,10 +80,9 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
           objects: [
             { 
               type: "image", 
-              width: $width, 
-              height: $height, 
-              valueType: "dynamic",
-              value: "path",
+              dynamicProperties: {
+                value: "back"
+              }
             }
           ] 
         },
@@ -79,10 +92,17 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
 }
 
 def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
-  mkdir staging/assets
-  glob $"($imagesDir)/*.png" | each { cp -f $in staging/assets/ }
+  let assetsDir = "staging/assets"
+  mkdir $assetsDir
+  let cardImageNames = ls $imagesDir | get name | path parse | get stem
 
-  let cards = parseCardImageFiles staging/assets/
+  $cardImageNames | each {
+    let inPath = $"($imagesDir)/($in).png"
+    let outPath = $"($assetsDir)/($in).webp"
+    ^cwebp $inPath -o $outPath
+  }
+
+  let cards = parseCardImageNames $cardImageNames
   let cardInstanceStructs = createCardInstanceData $cards
 
   let $baseStruct = {

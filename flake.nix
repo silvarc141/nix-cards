@@ -38,13 +38,15 @@
         }
       );
       formatter = genAttrs allSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
-      defaultPackage = genAttrs allSystems (system: self.legacyPackages.${system}.ruby-squib-env);
+      packages = genAttrs allSystems (system: {
+        default = self.legacyPackages.${system}.ruby-squib-env;
+      });
     in
     {
       inherit
         formatter
         legacyPackages
-        defaultPackage
+        packages
         checks
         ;
     };
