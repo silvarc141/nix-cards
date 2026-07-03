@@ -145,7 +145,7 @@ def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
     }
   };
 
-  let deckStructs = createDeckStructs $cardImageAssetData
+  let deckStructs = createDeckVttStructs $cardImageAssetData
 
   $baseStruct 
   | merge $deckStructs
