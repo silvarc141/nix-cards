@@ -1,12 +1,29 @@
-def parseCardImageNames [ cardImageNames : list<string> ] {
-  $cardImageNames | each {
-    let name = $in
-    let parsed = $name | parse --regex '(?<game>[a-z]*)-(?<deck>[a-z]*)-(?<side>[a-z]*)(?<index>\d*)'
-    $parsed | insert name $name | reject game
+def createImageAssetData [ imagesDir : string ] {
+  ls ($imagesDir | path expand) | each {
+    let path = $in.name
+    let size = $in.size | into int
+    let crc = getSignedCrc $path
+    let vttFileName = $"($crc)_($size)"
+    let parsed = $path | parse --regex '(?<game>[a-z]*)-(?<deck>[a-z]*)-(?<side>[a-z]*)(?<index>\d*)'
+    $parsed 
+    | insert path $path
+    | insert vttFileName $vttFileName
+    | insert vttPath $"/assets/($vttFileName)"
+    | reject game
   } | flatten
 }
 
-def createCardInstanceData [ cards: table ] {
+def getSignedCrc [ filePath : string ] {
+    let stringCrc = cat $filePath | ^crc32
+    let intCrc = ($"0x($stringCrc)" | into int)
+    if $intCrc > 0x7fffffff {
+      $intCrc - 0x100000000
+    } else {
+      $intCrc
+    }
+}
+
+def createCardInstanceVttStructs [ cards: table ] {
   $cards | where side == "front" | each {
     {
       id: $"($in.deck)($in.index)Card",
@@ -18,10 +35,19 @@ def createCardInstanceData [ cards: table ] {
   } | reduce -f {} {|row, acc| $acc | insert $row.id $row }
 }
 
-def createDeckStruct [ cards: table, deckName: string, width: int, height: int, x: int, y: int ] {
+def createDeckVttStructs [ cards: table ] {
+  $cards
+  | group-by deck --prune 
+  | transpose name cards
+  | enumerate
+  | flatten
+  | each { constructDeck $in.cards $in.name 150 225 ($in.index * 150) 0 }
+  | reduce { |it, acc| $acc | merge $it }
+}
+
+def constructDeck [ cards: table, deckName: string, width: int, height: int, x: int, y: int ] {
   let cardTypes = $cards
-  | insert path {|x| $"/assets/($x.name).webp"}
-  | reject name
+  | reject path vttFileName
   | group-by index --prune 
   | items { |cardId,cardData| { 
     name: $"($deckName)($cardId)",
@@ -100,16 +126,15 @@ def createDeckStruct [ cards: table, deckName: string, width: int, height: int, 
 def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
   let assetsDir = "staging/assets"
   mkdir $assetsDir
-  let cardImageNames = ls $imagesDir | get name | path parse | get stem
-
-  $cardImageNames | each {
-    let inPath = $"($imagesDir)/($in).png"
-    let outPath = $"($assetsDir)/($in).webp"
-    ^cwebp $inPath -o $outPath
+  ls $imagesDir | get name | each {
+    ^cwebp $in -o $"($assetsDir)/($in | path basename).webp"
   }
 
-  let cards = parseCardImageNames $cardImageNames
-  let cardInstanceStructs = createCardInstanceData $cards
+  let cardImageAssetData = createImageAssetData $assetsDir
+
+  $cardImageAssetData | each { mv -f $in.path $"($assetsDir)/($in.vttFileName)" } 
+
+  let cardInstanceStructs = createCardInstanceVttStructs $cardImageAssetData
 
   let $baseStruct = {
     _meta: { 
@@ -120,13 +145,7 @@ def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
     }
   };
 
-  let deckStructs = $cards
-  | group-by deck --prune 
-  | transpose name cards
-  | enumerate
-  | flatten
-  | each { createDeckStruct $in.cards $in.name 150 225 ($in.index * 150) 0 }
-  | reduce { |it, acc| $acc | merge $it }
+  let deckStructs = createDeckStructs $cardImageAssetData
 
   $baseStruct 
   | merge $deckStructs
