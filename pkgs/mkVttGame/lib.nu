@@ -18,38 +18,40 @@ def createCardInstanceData [ cards: table ] {
   } | reduce -f {} {|row, acc| $acc | insert $row.id $row }
 }
 
-def createDeckStruct [ cards: table, name: string, width: int, height: int, x: int, y: int ] {
+def createDeckStruct [ cards: table, deckName: string, width: int, height: int, x: int, y: int ] {
   let cardTypes = $cards
   | insert path {|x| $"/assets/($x.name).webp"}
   | reject name
   | group-by index --prune 
   | items { |cardId,cardData| { 
-    name: $"($name)($cardId)",
+    name: $"($deckName)($cardId)",
     sides: ($cardData | transpose -rd) } 
   } | transpose -rd
 
   {
-    $"($name)Holder": {
-      id: $"($name)Holder",
+    $"($deckName)Holder": {
+      id: $"($deckName)Holder",
       type: "holder",
       x: $x,
       y: $y,
       width: $width,
       height: $height
     },
-    $"($name)Pile": {
-      id: $"($name)Pile",
+    $"($deckName)Pile": {
+      id: $"($deckName)Pile",
       type: "pile",
-      parent: $"($name)Holder"
+      parent: $"($deckName)Holder"
+      width: $width,
+      height: $height
     },
-    $"($name)Deck": {
-      id: $"($name)Deck",
+    $"($deckName)Deck": {
+      id: $"($deckName)Deck",
       type: "deck",
-      parent: $"($name)Holder"
+      parent: $"($deckName)Holder"
       cardDefaults: {
         width: $width,
         height: $height,
-        color: "transparent",
+        color: "blue",
         enlarge: 3,
         clickRoutine: [
           {
@@ -70,6 +72,8 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
           objects: [
             { 
               type: "image", 
+              width: $width,
+              height: $height,
               dynamicProperties: {
                 value: "front"
               }
@@ -80,6 +84,8 @@ def createDeckStruct [ cards: table, name: string, width: int, height: int, x: i
           objects: [
             { 
               type: "image", 
+              width: $width,
+              height: $height,
               dynamicProperties: {
                 value: "back"
               }
@@ -117,7 +123,9 @@ def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
   let deckStructs = $cards
   | group-by deck --prune 
   | transpose name cards
-  | each { createDeckStruct $in.cards $in.name 150 225 0 0 }
+  | enumerate
+  | flatten
+  | each { createDeckStruct $in.cards $in.name 150 225 ($in.index * 150) 0 }
   | reduce { |it, acc| $acc | merge $it }
 
   $baseStruct 
