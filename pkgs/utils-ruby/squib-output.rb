@@ -23,6 +23,8 @@ def construct_output(output_dir, variant, prefix, back, printer_margin, bleed)
     save_png dir: output_dir, prefix: prefix
   when "images-pnp"
     save_png dir: output_dir, prefix: prefix, trim: bleed
+  when "images-web"
+    save_png dir: output_dir, prefix: prefix, trim: bleed
   when "single"
     save_png range: 0, dir: output_dir, prefix: "#{prefix}-example", count_format: ''
   end

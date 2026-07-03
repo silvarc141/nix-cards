@@ -36,12 +36,14 @@ def createCardInstanceVttStructs [ cards: table ] {
 }
 
 def createDeckVttStructs [ cards: table ] {
+  let width = 125
+  let height = 175
   $cards
   | group-by deck --prune 
   | transpose name cards
   | enumerate
   | flatten
-  | each { constructDeck $in.cards $in.name 150 225 ($in.index * 150) 0 }
+  | each { constructDeck $in.cards $in.name $width $height ($in.index * $width) 0 }
   | reduce { |it, acc| $acc | merge $it }
 }
 
@@ -77,7 +79,7 @@ def constructDeck [ cards: table, deckName: string, width: int, height: int, x: 
       cardDefaults: {
         width: $width,
         height: $height,
-        color: "blue",
+        color: "transparent",
         enlarge: 3,
         clickRoutine: [
           {
@@ -126,6 +128,8 @@ def constructDeck [ cards: table, deckName: string, width: int, height: int, x: 
 def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
   let assetsDir = "staging/assets"
   mkdir $assetsDir
+
+  # TODO: move conversion to webp to web output variant instead
   ls $imagesDir | get name | each {
     ^cwebp $in -o $"($assetsDir)/($in | path basename).webp"
   }

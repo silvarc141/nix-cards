@@ -20,6 +20,7 @@
     "sheet-pnp"
     "images"
     "images-pnp"
+    "images-web"
     "single"
   ],
   gameName ? "cards",
