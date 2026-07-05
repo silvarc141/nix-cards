@@ -35,9 +35,7 @@ def createCardInstanceVttStructs [ cards: table ] {
   } | reduce -f {} {|row, acc| $acc | insert $row.id $row }
 }
 
-def createDeckVttStructs [ cards: table ] {
-  let width = 125
-  let height = 175
+def createDeckVttStructs [ cards: table, width: int, height: int ] {
   $cards
   | group-by deck --prune 
   | transpose name cards
@@ -96,6 +94,18 @@ def constructDeck [ cards: table, deckName: string, width: int, height: int, x: 
       },
       cardTypes: $cardTypes,
       faceTemplates: [
+        {
+          objects: [
+            { 
+              type: "image", 
+              width: $width,
+              height: $height,
+              dynamicProperties: {
+                value: "back"
+              }
+            }
+          ] 
+        }
         { 
           objects: [
             { 
@@ -108,24 +118,30 @@ def constructDeck [ cards: table, deckName: string, width: int, height: int, x: 
             }
           ] 
         }
-        {
-          objects: [
-            { 
-              type: "image", 
-              width: $width,
-              height: $height,
-              dynamicProperties: {
-                value: "back"
-              }
-            }
-          ] 
-        },
       ],
     },
   }
 }
 
-def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
+# Package card images as a .vtt zip file compatible with virtualtabletop.io.
+# Each has to be represented by an image file.
+# Each image file has to be named according to the following scheme:
+# $"($anyPrefix)-($deckName)-($side)($cardNumber)($anySuffixAndExtension)"
+# Explanation:
+# - anyPrefix/anySuffixAndExtension -> any string without '-'
+# - deckName -> name of the deck to which the card belongs to, each unique deck name will result in a separate vtt deck
+# - side -> 'front' or 'back'
+# - cardNumber -> number-only unique id of the card
+export def packageCardImagesAsVttGame [ 
+  imagesDir: path # directory of card images
+  outDir: path # output directory
+  gameName: string = "Generated Card Game" # game name displayed in virtualtabletop.io
+  cardWidth: int = 125
+  cardHeight: int = 175
+  # TODO: implement the below
+  # extraDataCardDefaults: path = "" # a path to a nu-openable file containing data that will be merged with cardDefaults section of each generated deck
+  # extraDataTopLevel: path = "" # a path to a nu-openable file containing data that will be merged with the final generated data
+] {
   let assetsDir = "staging/assets"
   mkdir $assetsDir
 
@@ -147,9 +163,26 @@ def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
         name: $gameName, 
       } 
     }
-  };
+    hand: {
+      type: "hodler",
+      id: "hand",
+      x: 0,
+      y: (1000 - $cardHeight),
+      height: $cardHeight,
+      width: 800, # half a room
+      childrenPerOwner: true,
+      hidePlayerCursors: true,
+      onEnter: {
+        activeFace: 1
+      },
+      onLeave: {
+        activeFace: 0
+      },
+      stackOffsetX: ($cardWidth / 2)
+    }
+  }
 
-  let deckStructs = createDeckVttStructs $cardImageAssetData
+  let deckStructs = createDeckVttStructs $cardImageAssetData $cardWidth $cardHeight
 
   $baseStruct 
   | merge $deckStructs
@@ -160,4 +193,7 @@ def packageImagesAsVttGame [ imagesDir: path, outDir: path, gameName: string ] {
   mkdir $outDir
   cd staging
   ^zip -9rq $"($outDir)/($gameName).vtt" .
+
+  cd ..
+  rm -rf staging
 }
