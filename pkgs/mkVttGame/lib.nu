@@ -164,7 +164,7 @@ export def packageCardImagesAsVttGame [
       } 
     }
     hand: {
-      type: "hodler",
+      type: "holder",
       id: "hand",
       x: 0,
       y: (1000 - $cardHeight),
