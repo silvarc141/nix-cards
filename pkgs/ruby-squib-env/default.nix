@@ -3,7 +3,6 @@
   pkg-config,
   writeShellScriptBin,
 
-  ruby,
   rake,
   defaultGemConfig,
   bundlerEnv,
@@ -31,14 +30,12 @@ let
     makeBinPath
     makeSearchPathOutput
     makeLibraryPath
-    getExe
     ;
 
   fontsConf = makeFontsConf { inherit fontDirectories; };
 
   rubyEnv = bundlerEnv {
     name = "ruby-bundler-env-squib";
-    inherit ruby;
     gemdir = ./.;
     gemConfig = defaultGemConfig // {
       rsvg2 = attrs: {
@@ -50,14 +47,12 @@ let
       };
       squib = attrs: {
         src = squib-src;
-        type = "git";
       };
     };
   };
 
   runtimeInputs = [
     rubyEnv
-    ruby
     gobject-introspection
     cairo
     pango
@@ -68,16 +63,18 @@ let
   ]
   ++ extraPackages;
 in
-writeShellScriptBin "ruby" ''
+writeShellScriptBin "ruby-squib-env" ''
   ulimit -n 65536 2/dev/null
   export PATH="${makeBinPath runtimeInputs}:$PATH"
   export LD_LIBRARY_PATH="${makeLibraryPath runtimeInputs}:$LD_LIBRARY_PATH"
   export GI_TYPELIB_PATH="${
     makeSearchPathOutput "lib" "lib/girepository-1.0" runtimeInputs
   }:$GI_TYPELIB_PATH"
-  export G_MESSAGES_DEBUG=all
   export XDG_CACHE_HOME="$(mktemp -d)"
   export FONTCONFIG_FILE="$XDG_CACHE_HOME/fonts.conf"
   cp "${fontsConf}" "$FONTCONFIG_FILE"
-  exec ${getExe rubyEnv.wrappedRuby} "$@"
+
+  export BUNDLE_GEMFILE="${rubyEnv.confFiles}/Gemfile"
+  export RUBYOPT="-rbundler/setup"
+  exec ${rubyEnv.wrappedRuby}/bin/ruby "$@"
 ''
