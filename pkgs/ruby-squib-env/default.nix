@@ -37,7 +37,7 @@ let
   fontsConf = makeFontsConf { inherit fontDirectories; };
 
   rubyEnv = bundlerEnv {
-    name = "squib-env-final";
+    name = "ruby-bundler-env-squib";
     inherit ruby;
     gemdir = ./.;
     gemConfig = defaultGemConfig // {
@@ -50,6 +50,7 @@ let
       };
       squib = attrs: {
         src = squib-src;
+        type = "git";
       };
     };
   };

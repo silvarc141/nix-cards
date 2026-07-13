@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-rm gemset.nix
-rm Gemfile.lock
-BUNDLE_FORCE_RUBY_PLATFORM=true nix run nixpkgs#bundix -- --lock
+rm -f gemset.nix
+rm -f Gemfile.lock
+
+nix flake update squib-src
+BUNDLE_FORCE_RUBY_PLATFORM=true nix shell nixpkgs#bundler nixpkgs#bundix --command 'bundle lock; bundix'
