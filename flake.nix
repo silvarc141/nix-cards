@@ -7,6 +7,10 @@
       url = "github:silvarc141/nix-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    squib-src = {
+      url = "github:silvarc141/squib";
+      flake = false;
+    };
   };
 
   outputs =
@@ -14,6 +18,7 @@
       self,
       nixpkgs,
       nix-utils,
+      squib-src,
       ...
     }:
     let
@@ -28,6 +33,7 @@
           pkgs = nixpkgs.legacyPackages.${system};
           pkgsSelf = self.legacyPackages.${system};
           utils = nix-utils.legacyPackages.${system};
+          inherit squib-src;
         }
       );
       checks = genAttrs allSystems (

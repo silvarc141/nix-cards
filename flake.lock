@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1783301600,
-        "narHash": "sha256-NRNbSuhDAQKcnCigtuXKhShO8UR8O6uzgOF3eWL787M=",
+        "lastModified": 1783935193,
+        "narHash": "sha256-a+rUJO5VU0xm80OBzneNVVy4X3FoDVUKZyi6L18DGNM=",
         "owner": "silvarc141",
         "repo": "nix-utils",
-        "rev": "6ce87130213fb6e6b5b7ec310f21f5e402354d51",
+        "rev": "bed197ea8eea2cf67cf8320b513c3ca3f73b0ac0",
         "type": "github"
       },
       "original": {
@@ -22,11 +22,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1782847225,
-        "narHash": "sha256-JC9PjqKYG9ve5U8aDOLQipp3+KLANBHUvGdLZlxzdKI=",
+        "lastModified": 1783856661,
+        "narHash": "sha256-ZGP04e+Q6WyQJGA9ZvI5CL6+heGQldbAG9U1T9NGvmU=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "95ca1e203c0750115fd4a6f17d5a245dfe6b1edd",
+        "rev": "569d578509928497eddc3fdbf94a799027050be4",
         "type": "github"
       },
       "original": {
@@ -39,7 +39,24 @@
     "root": {
       "inputs": {
         "nix-utils": "nix-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "squib-src": "squib-src"
+      }
+    },
+    "squib-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1782940658,
+        "narHash": "sha256-h7/L7ZbaSBi34L8O+G1NJTcSJ32sS4qlICoqiMNfDS8=",
+        "owner": "silvarc141",
+        "repo": "squib",
+        "rev": "6e6a6733b50e12d9aa24ce7a19e42fa9e9f6061a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "silvarc141",
+        "repo": "squib",
+        "type": "github"
       }
     }
   },

@@ -1,13 +1,14 @@
 {
   lib,
-  stdenv,
-  fetchFromGitHub,
-  writeShellScriptBin,
   pkg-config,
+  writeShellScriptBin,
+
   ruby,
   rake,
   defaultGemConfig,
   bundlerEnv,
+
+  squib-src,
   gobject-introspection,
   cairo,
   pango,
@@ -16,29 +17,24 @@
   harfbuzz,
   glib,
   makeFontsConf,
+
+  # List of directories which the env will scan for fonts.
   fontDirectories ? [ ],
+
+  # This only adds packages to PATH.
+  # Adding an actual gem would require modyfing the Gemfile and relocking with bundix.
   extraPackages ? [ ],
   ...
 }:
 let
-  squib-fork = stdenv.mkDerivation {
-    pname = "squib-fork";
-    version = "0.20.0a";
+  inherit (lib)
+    makeBinPath
+    makeSearchPathOutput
+    makeLibraryPath
+    getExe
+    ;
 
-    src = fetchFromGitHub {
-      owner = "silvarc141";
-      repo = "squib";
-      rev = "6e6a6733b50e12d9aa24ce7a19e42fa9e9f6061a";
-      sha256 = "sha256-TwmZdeLiR+q/qDx1VSKpNgEHN7zET3KB9tIDkdyGOQY=";
-    };
-
-    nativeBuildInputs = [ ruby ];
-
-    installPhase = ''
-      mkdir -p $out
-      cp -r . $out/
-    '';
-  };
+  fontsConf = makeFontsConf { inherit fontDirectories; };
 
   rubyEnv = bundlerEnv {
     name = "squib-env-final";
@@ -53,12 +49,10 @@ let
         buildInputs = [ librsvg ];
       };
       squib = attrs: {
-        src = squib-fork;
+        src = squib-src;
       };
     };
   };
-
-  fontsConf = makeFontsConf { inherit fontDirectories; };
 
   runtimeInputs = [
     rubyEnv
@@ -73,18 +67,16 @@ let
   ]
   ++ extraPackages;
 in
-writeShellScriptBin "ruby"
-  #sh
-  ''
-    ulimit -n 65536 2/dev/null
-    export PATH="${lib.makeBinPath runtimeInputs}:$PATH"
-    export LD_LIBRARY_PATH="${lib.makeLibraryPath runtimeInputs}:$LD_LIBRARY_PATH"
-    export GI_TYPELIB_PATH="${
-      lib.makeSearchPathOutput "lib" "lib/girepository-1.0" runtimeInputs
-    }:$GI_TYPELIB_PATH"
-    export G_MESSAGES_DEBUG=all
-    export XDG_CACHE_HOME="$(mktemp -d)"
-    export FONTCONFIG_FILE="$XDG_CACHE_HOME/fonts.conf"
-    cp "${fontsConf}" "$FONTCONFIG_FILE"
-    exec ${rubyEnv.wrappedRuby}/bin/ruby "$@"
-  ''
+writeShellScriptBin "ruby" ''
+  ulimit -n 65536 2/dev/null
+  export PATH="${makeBinPath runtimeInputs}:$PATH"
+  export LD_LIBRARY_PATH="${makeLibraryPath runtimeInputs}:$LD_LIBRARY_PATH"
+  export GI_TYPELIB_PATH="${
+    makeSearchPathOutput "lib" "lib/girepository-1.0" runtimeInputs
+  }:$GI_TYPELIB_PATH"
+  export G_MESSAGES_DEBUG=all
+  export XDG_CACHE_HOME="$(mktemp -d)"
+  export FONTCONFIG_FILE="$XDG_CACHE_HOME/fonts.conf"
+  cp "${fontsConf}" "$FONTCONFIG_FILE"
+  exec ${getExe rubyEnv.wrappedRuby} "$@"
+''
