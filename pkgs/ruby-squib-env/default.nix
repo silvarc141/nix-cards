@@ -70,11 +70,10 @@ writeShellScriptBin "ruby-squib-env" ''
   export GI_TYPELIB_PATH="${
     makeSearchPathOutput "lib" "lib/girepository-1.0" runtimeInputs
   }:$GI_TYPELIB_PATH"
+
   export XDG_CACHE_HOME="$(mktemp -d)"
   export FONTCONFIG_FILE="$XDG_CACHE_HOME/fonts.conf"
   cp "${fontsConf}" "$FONTCONFIG_FILE"
 
-  export BUNDLE_GEMFILE="${rubyEnv.confFiles}/Gemfile"
-  export RUBYOPT="-rbundler/setup"
-  exec ${rubyEnv.wrappedRuby}/bin/ruby "$@"
+  exec ${rubyEnv}/bin/bundle exec ${rubyEnv.wrappedRuby}/bin/ruby "$@"
 ''
